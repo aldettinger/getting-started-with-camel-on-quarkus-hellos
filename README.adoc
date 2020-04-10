@@ -1,0 +1,93 @@
+= Camel-Quarkus Demo
+
+== How to Prepare the Demo
+
+[source,shell]
+----
+cd camel-quarkus-demo
+git clone https://github.com/aldettinger/camel-quarkus-hellos.git camel-quarkus-hellos
+
+# Start a crc cluster, for instance:
+# @TODO: Check that the pre-configured crc cluster could be started offline
+crc start -b crc-linux-1.8.0-amd64/crc_libvirt_4.3.8.crcbundle
+
+# Deploy hellos project to the crc cluster
+cd camel-quarkus-hellos
+oc login -u kubeadmin -p <PASSWORD> https://api.crc.testing:6443
+mvnu clean package -Dquarkus.kubernetes.deploy=true
+
+# Check that the jvm mode pod is working
+curl -X PUT -d '{ "room" : { "temperature" : 35}}' http://hello-camel-quarkus-jvm-mode-default.apps-crc.testing/hello-camel-quarkus-jvm-mode --resolve hello-camel-quarkus-jvm-mode-default.apps-crc.testing:$(crc ip)
+curl http://hello-camel-quarkus-jvm-mode-default.apps-crc.testing/hello-camel-quarkus-jvm-mode --resolve hello-camel-quarkus-jvm-mode-default.apps-crc.testing:$(crc ip)
+
+# Check that the native mode pod is working
+# @TODO: The native route logs "Could not load font file: /usr/share/fonts/liberation/LiberationSans-Regular.ttf"
+# ERROR logs from pdfont are excluded as the log level is set to FATAL
+curl -X PUT -d '{ "room" : { "temperature" : 20}}' http://hello-camel-quarkus-native-mode-default.apps-crc.testing/hello-camel-quarkus-native-mode --resolve hello-camel-quarkus-native-mode-default.apps-crc.testing:$(crc ip)
+curl http://hello-camel-quarkus-native-mode-default.apps-crc.testing/hello-camel-quarkus-native-mode --resolve hello-camel-quarkus-native-mode-default.apps-crc.testing:$(crc ip)
+----
+
+== How to Run the Demo
+
+[source,shell]
+----
+# TODO, try to shrink parameter list even more
+mvnu io.quarkus:quarkus-maven-plugin:1.3.0.Final:create -DprojectArtifactId=camel-quarkus-example -DclassName="org.apache.camel.quarkus.example.ExampleResource" -Dextensions="camel-quarkus-direct"
+cd camel-quarkus-example
+
+# Show the developer joy of quarkus dev mode
+mvnu compile quarkus:dev
+
+# Getting the default resource created should return "hello"
+curl http://localhost:8080/hello
+
+# Introduce an issue in ExampleResource, then show quarkus:dev explaining the issue
+curl http://localhost:8080/hello
+
+# Fix the ExampleResource and return a configurable message from application.properties
+curl http://localhost:8080/hello
+
+# Oops, tests are not working, fix and show build OK
+mvnu clean install
+
+# Display the size of the runner
+du -sh target/camel-quarkus-example-1.0-SNAPSHOT-runner.jar
+
+# Show the jvm mode from the command line 
+java -jar target/camel-quarkus-example-runner.jar
+curl http://localhost:8080/hello
+
+# How to display rss usage ?
+# cd target
+# ps -ef | grep quarkus
+# ps -o cmd,rss <pid>
+
+# Then show native
+mvnu clean package -P native
+target/camel-quarkus-example-runner
+curl http://localhost:8080/hello
+
+# Display native rss, size (all metrics that we'll compare later in camel-hellos project)
+
+# Then, start building the hello camel quarkus application
+# Update the ExampleResource (1 put / 1 get)
+# Add the route from(direct:hello).jsonPath().to(pdf:create)
+
+mvnu quarkus:dev
+
+curl -X PUT -d '{ "room" : { "temperature" : 35}}' http://localhost:8080/hello
+# Open http://localhost:8080/hello from web browser
+
+# Then run the demo comparing camel-hellos project, e.g a summary like
+# Implement standalone, and perharps spring boot
+						boot	rss		size
+ standalone			1s		1Mo		1Mo
+ spring-boot			2s		2Mo		2Mo
+ quarkus-jvm-mode		3s		3Mo		3Mo
+ quarkus-native-mode	4s		4Mo		4Mo
+
+# Then show the resulting densification in a crc cluster with quotas mem ? cpu ? (ideally all hellos project but could be only jvm vs native)
+# Launch some requests to scale pods, we would expect native to exhibit a better densification
+
+# @TODO: Show quarkus live reload ? (update the dev and show result directly in the cluster)
+----
