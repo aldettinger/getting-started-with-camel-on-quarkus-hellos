@@ -4,16 +4,19 @@
 
 [source,shell]
 ----
-cd camel-quarkus-demo
-git clone https://github.com/aldettinger/camel-quarkus-hellos.git camel-quarkus-hellos
-
-# Start a crc cluster, for instance:
+# Start a cluster, for instance:
 # @TODO: Check that the pre-configured crc cluster could be started offline
 crc start -b crc-linux-1.8.0-amd64/crc_libvirt_4.3.8.crcbundle
 
+# Login
+oc login -u kubeadmin -p <PASSWORD> https://api.crc.testing:6443
+
+# Clone the git demo project locally
+cd camel-quarkus-demo
+git clone https://github.com/aldettinger/camel-quarkus-hellos.git camel-quarkus-hellos
+
 # Deploy hellos project to the crc cluster
 cd camel-quarkus-hellos
-oc login -u kubeadmin -p <PASSWORD> https://api.crc.testing:6443
 mvnu clean package -Dquarkus.kubernetes.deploy=true
 
 # Check that the jvm mode pod is working
@@ -31,11 +34,12 @@ curl http://hello-camel-quarkus-native-mode-default.apps-crc.testing/hello-camel
 
 [source,shell]
 ----
-# TODO, try to shrink parameter list even more
-mvnu io.quarkus:quarkus-maven-plugin:1.3.0.Final:create -DprojectArtifactId=camel-quarkus-example -DclassName="org.apache.camel.quarkus.example.ExampleResource" -Dextensions="camel-quarkus-direct"
-cd camel-quarkus-example
+mvnu io.quarkus:quarkus-maven-plugin:1.3.2.Final:create
+# Let's all default value, just say yes to create resource
+# Import and show in eclipse
 
 # Show the developer joy of quarkus dev mode
+cd my-quarkus-project
 mvnu compile quarkus:dev
 
 # Getting the default resource created should return "hello"
@@ -51,31 +55,33 @@ curl http://localhost:8080/hello
 mvnu clean install
 
 # Display the size of the runner
-du -sh target/camel-quarkus-example-1.0-SNAPSHOT-runner.jar
+du -sh target/my-quarkus-project-1.0-SNAPSHOT-runner.jar
 
-# Show the jvm mode from the command line 
-java -jar target/camel-quarkus-example-runner.jar
+# Show the jvm mode from the command line
+# TODO: Need a 2 sentences pitch to explain what quarkus does (closed world + build time configuration)
+java -jar target/my-quarkus-project-1.0-SNAPSHOT-runner.jar
 curl http://localhost:8080/hello
 
-# How to display rss usage ?
-# cd target
-# ps -ef | grep quarkus
-# ps -o cmd,rss <pid>
+# Define Resident Set Size (everything in RAM, shared library + stack + heap) and display usage in KiB
+ps -o rss,cmd `pgrep -f quarkus`
 
-# Then show native
-mvnu clean package -P native
-target/camel-quarkus-example-runner
+# Then show native (Need a 1m30s pitch to explain what native mode brings on top of jvm mode)
+mvnu clean integration-test -P native
+target/my-quarkus-project-1.0-SNAPSHOT-runner
 curl http://localhost:8080/hello
 
-# Display native rss, size (all metrics that we'll compare later in camel-hellos project)
+# Display all metrics shown in jvm mode
+du -sh target/my-quarkus-project-1.0-SNAPSHOT-runner*
+ps -o rss,cmd `pgrep -f quarkus`
 
 # Then, start building the hello camel quarkus application
 # Update the ExampleResource (1 put / 1 get)
 # Add the route from(direct:hello).jsonPath().to(pdf:create)
+mvnu quarkus:add-extension -Dextensions="camel-quarkus-direct,camel-quarkus-pdf,camel-quarkus-jsonpath"
 
 mvnu quarkus:dev
 
-curl -X PUT -d '{ "room" : { "temperature" : 35}}' http://localhost:8080/hello
+curl -X put -d '{ "room" : { "temperature" : 35}}' http://localhost:8080/hello
 # Open http://localhost:8080/hello from web browser
 
 # Then run the demo comparing camel-hellos project, e.g a summary like
@@ -85,6 +91,7 @@ curl -X PUT -d '{ "room" : { "temperature" : 35}}' http://localhost:8080/hello
  spring-boot			2s		2Mo		2Mo
  quarkus-jvm-mode		3s		3Mo		3Mo
  quarkus-native-mode	4s		4Mo		4Mo
+camel-hellos/compare.sh
 
 # Then show the resulting densification in a crc cluster with quotas mem ? cpu ? (ideally all hellos project but could be only jvm vs native)
 # Launch some requests to scale pods, we would expect native to exhibit a better densification
