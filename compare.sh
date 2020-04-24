@@ -20,8 +20,8 @@ QUARKUS_JVM_DISK_SIZE=$(du -sh "${QUARKUS_JVM_RUNNER}.jar" | cut -f1)
 QUARKUS_NATIVE_DISK_SIZE=$(du -sh "${QUARKUS_NATIVE_RUNNER}" | cut -f1)
 
 # Get boot time
-QUARKUS_JVM_BOOT_SECONDS=$(grep -Po "started in (.*)s\." "${QUARKUS_JVM_RUNNER}.log" | sed -r 's/started in (.*)s\./\1/g')
-QUARKUS_NATIVE_BOOT_SECONDS=$(grep -Po "started in (.*)s\." "${QUARKUS_NATIVE_RUNNER}.log" | sed -r 's/started in (.*)s\./\1/g')
+QUARKUS_JVM_BOOT_SECONDS=$(grep -Po "started in (.*) seconds" "${QUARKUS_JVM_RUNNER}.log" | sed -r 's/started in (.*) seconds/\1/g')
+QUARKUS_NATIVE_BOOT_SECONDS=$(grep -Po "started in (.*) seconds" "${QUARKUS_NATIVE_RUNNER}.log" | sed -r 's/started in (.*) seconds/\1/g')
 
 # Get rss
 QUARKUS_JVM_RSS=$(ps -o rss ${QUARKUS_JVM_PID} | sed -n 2p)

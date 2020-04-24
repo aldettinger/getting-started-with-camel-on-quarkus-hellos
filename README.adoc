@@ -16,7 +16,7 @@ cd camel-quarkus-demo
 git clone https://github.com/aldettinger/camel-quarkus-hellos.git camel-quarkus-hellos
 
 # Deploy hellos project to the crc cluster
-cd camel-quarkus-hellos
+cd camel-hellos
 mvnu clean package -Dquarkus.kubernetes.deploy=true
 
 # Check that the jvm mode pod is working
@@ -28,6 +28,10 @@ curl http://hello-camel-quarkus-jvm-mode-default.apps-crc.testing/hello-camel-qu
 # ERROR logs from pdfont are excluded as the log level is set to FATAL
 curl -X PUT -d '{ "room" : { "temperature" : 20}}' http://hello-camel-quarkus-native-mode-default.apps-crc.testing/hello-camel-quarkus-native-mode --resolve hello-camel-quarkus-native-mode-default.apps-crc.testing:$(crc ip)
 curl http://hello-camel-quarkus-native-mode-default.apps-crc.testing/hello-camel-quarkus-native-mode --resolve hello-camel-quarkus-native-mode-default.apps-crc.testing:$(crc ip)
+
+# Delete the my-quarkus-demo-project if any
+cd ..
+rm -fr my-quarkus-project
 ----
 
 == How to Run the Demo
@@ -35,7 +39,7 @@ curl http://hello-camel-quarkus-native-mode-default.apps-crc.testing/hello-camel
 [source,shell]
 ----
 mvnu io.quarkus:quarkus-maven-plugin:1.3.2.Final:create
-# Let's all default value, just say yes to create resource
+# Keep default values, just say yes to create resource
 # Import and show in eclipse
 
 # Show the developer joy of quarkus dev mode
@@ -63,7 +67,7 @@ java -jar target/my-quarkus-project-1.0-SNAPSHOT-runner.jar
 curl http://localhost:8080/hello
 
 # Define Resident Set Size (everything in RAM, shared library + stack + heap) and display usage in KiB
-ps -o rss,cmd `pgrep -f quarkus`
+ps -o rss,cmd $(pgrep -f quarkus)
 
 # Then show native (Need a 1m30s pitch to explain what native mode brings on top of jvm mode)
 mvnu clean integration-test -P native
@@ -72,7 +76,7 @@ curl http://localhost:8080/hello
 
 # Display all metrics shown in jvm mode
 du -sh target/my-quarkus-project-1.0-SNAPSHOT-runner*
-ps -o rss,cmd `pgrep -f quarkus`
+ps -o rss,cmd $(pgrep -f quarkus)
 
 # Then, start building the hello camel quarkus application
 # Update the ExampleResource (1 put / 1 get)
@@ -97,4 +101,11 @@ camel-hellos/compare.sh
 # Launch some requests to scale pods, we would expect native to exhibit a better densification
 
 # @TODO: Show quarkus live reload ? (update the dev and show result directly in the cluster)
+
+Raw notes for demo:
+Interest of native mode:
+JIT vs AOT => faster startup since code is already pre-compiled into efficient machine code
+No need to include infrastructure to load and optimize code at run time => less memory
+static analysis to embed what's used from the JDK, 3rd party libs and JVM code
+Tool "hey" to push a burden like "hey url"
 ----
