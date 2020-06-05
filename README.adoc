@@ -135,7 +135,7 @@ compare.sh compare disk/boot/rss before the first request, so do the same during
 Show quarkus live reload ? (update the dev and show result directly in the cluster)
 Does quarkus really improve disk size in jvm mode only ? integrate an unused class and check size for instance ?
 Does quarkus really improve memory size in jvm mode only ? how ?
-Finish the demo, with how could help with camel-quarkus project
+Finish the demo explaining how could help with camel-quarkus project
 
 When I boot offline, then start crc, I get the issue below:
 ERRO Failed to query DNS from host: lookup api.crc.testing on [::1]:53: read udp [::1]:36955->[::1]:53: read: connection refused
