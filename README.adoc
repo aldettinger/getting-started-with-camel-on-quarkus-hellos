@@ -131,7 +131,7 @@ static analysis to embed what's used from the JDK, 3rd party libs and JVM code
 Tool "hey" to push a burden like "hey url"
 vscode to have auto completion ?
 init project from quarkus.io ?
-compare.sh compare disk/boot/rss before the first request, so do the same during the demo
+compare.sh compare disk/boot/rss BEFORE the first request, so do the same during the demo
 Show quarkus live reload ? (update the dev and show result directly in the cluster)
 Does quarkus really improve disk size in jvm mode only ? integrate an unused class and check size for instance ?
 Does quarkus really improve memory size in jvm mode only ? how ?
