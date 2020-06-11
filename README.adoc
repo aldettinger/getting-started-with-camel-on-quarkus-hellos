@@ -10,9 +10,6 @@ crc start -b crc-linux-1.8.0-amd64/crc_libvirt_4.3.8.crcbundle
 # Login
 oc login -u kubeadmin -p <PASSWORD> https://api.crc.testing:6443
 
-# Set java version if needed
-sdk use java 11.0.7.hs-adpt
-
 # Clone the git demo project locally
 cd camel-quarkus-demo
 git clone https://github.com/aldettinger/camel-quarkus-hellos.git camel-quarkus-hellos
@@ -30,14 +27,13 @@ curl http://hello-camel-quarkus-jvm-mode-default.apps-crc.testing/hello-camel-qu
 curl -X PUT -d '{ "room" : { "temperature" : 20}}' http://hello-camel-quarkus-native-mode-default.apps-crc.testing/hello-camel-quarkus-native-mode --resolve hello-camel-quarkus-native-mode-default.apps-crc.testing:$(crc ip)
 curl http://hello-camel-quarkus-native-mode-default.apps-crc.testing/hello-camel-quarkus-native-mode --resolve hello-camel-quarkus-native-mode-default.apps-crc.testing:$(crc ip)
 
-# Delete the my-quarkus-demo-project if any
-cd ..
-rm -fr my-quarkus-project
+# Delete my-quarkus project from eclipse if any
+# Delete directroy if any:
+rm -fr ~/dev/demos/camel-quarkus-demo/my-quarkus-project/
 
 Open terminator
-Split window vertically #And in both terminal do:
+Split window horizontally #And in both terminal do:
 cd ~/dev/demos/camel-quarkus-demo/
-sdk use java 11.0.7.hs-adpt
 ----
 
 == How to Run the Demo
@@ -47,9 +43,9 @@ sdk use java 11.0.7.hs-adpt
 mvnu io.quarkus:quarkus-maven-plugin:1.5.0.Final:create
 # Keep all default values
 
-# Show the developer joy of quarkus dev mode
+# Show extensions
 cd my-quarkus-project
-mvnu quarkus:add-extensions -Dextensions=platform-http,jsonpath
+mvnu quarkus:add-extensions -Dextensions=platform-http,jsonpath,pdf
 
 # Import in eclipse: ~/dev/demos/camel-quarkus-demo/my-quarkus-project
 
@@ -57,7 +53,7 @@ Create MyRouteBuilder class:
 public class MyRouteBuilder extends RouteBuilder {
     @Override
     public void configure() {
-        from("platform-http:/hello").setBody(simple("Hello From Camel Quarkus !"));
+        from("platform-http:/hello").setBody(constant("Hello From Camel Quarkus !"));
     }
 }
 
@@ -65,7 +61,7 @@ public class MyRouteBuilder extends RouteBuilder {
 mvnu quarkus:dev
 
 # Get the first body, change, and show update in the blink of an eye
-curl http://localhost:8080/hello
+http :8080/hello
 
 # Add MyRouteBuilderTest:
 import static io.restassured.RestAssured.given;
@@ -78,37 +74,54 @@ public class MyRouteBuilderTest {
     }
 }
 
-# Display the size of the runner + lib + 
-du -chs target/my-quarkus-project-1.0-SNAPSHOT-runner.jar target/lib ${JAVA_HOME}
+# Display the size of the runner + lib + java
+du -chLs target/my-quarkus-project-1.0-SNAPSHOT-runner.jar target/lib ${JAVA_HOME}
 
 # Show the jvm mode from the command line
 java -jar target/my-quarkus-project-1.0-SNAPSHOT-runner.jar
 
-# Notice the quarkus boot time
+# Notice the camel boot time
 # Define Resident Set Size (everything in RAM, shared library + stack + heap) and display usage in KiB
 ps -o rss,cmd $(pgrep -f quarkus)
 
 # Proves that it run but ONLY after having checked initial memory
-curl http://localhost:8080/hello
+http :8080/hello
 
-# Then show native mode
-# 2m30s Speach, it takes time so explain
+# Then show native mode, 3 minutes speach while native compilation occurs
 # Recap JVM mode optimization (closed world + build time configuration)... TODO
 # Native mode, graalvm, static code analysis, remove jit, execute static initializer, take heap snapshot... TODO
 mvnu package -P native
 
-# Show size first
-du -chs target/my-quarkus-project-1.0-SNAPSHOT-runner*
+# Show size first (just enough of application code / third party libs / jdk)
+du -chLs target/my-quarkus-project-1.0-SNAPSHOT-runner*
 # Then boot time
 target/my-quarkus-project-1.0-SNAPSHOT-runner
-# Then rss time
+# Then rss mem
 ps -o rss,cmd $(pgrep -f quarkus)
 # And finally show it working
-curl http://localhost:8080/hello
+http :8080/hello
 
-# TODO: Integrate a bit of jsonpath logic here and modify apps used by compare.sh
-curl -X put -d '{ "room" : { "temperature" : 35}}' http://localhost:8080/hello
-# Open http://localhost:8080/hello from web browser
+# Add default message:
+# setBody(simple("{{camel.default-msg}}")). # in route
+# camel.default-msg = COLD # in src/main/resources/applications.properties
+http :8080/hello
+
+# Add some jsonpath logic in route:
+#    @Override
+#    public void configure() throws Exception {
+#        from("platform-http:/hello").
+#            choice().when(jsonpath("$.room[?(@.temperature > 30)]")).
+#                setBody(constant("HOT")).
+#            otherwise().
+#                setBody(constant("COLD")).
+#            end();
+#    }
+http :8080/hello <<< '{room: {temperature: 30}}'
+
+# Finally, add pdf generation
+# .to("pdf:create?fontSize=26").convertBodyTo(byte[].class);
+http :8080/hello <<< '{room : {temperature : 40}}' > test.pdf
+firefox test.pdf
 
 # Then run the demo comparing camel-hellos project, e.g a summary like
 # Implement standalone, and perharps spring boot
@@ -136,6 +149,9 @@ Show quarkus live reload ? (update the dev and show result directly in the clust
 Does quarkus really improve disk size in jvm mode only ? integrate an unused class and check size for instance ?
 Does quarkus really improve memory size in jvm mode only ? how ?
 Finish the demo explaining how could help with camel-quarkus project
+An interest of fast startup is that it improve disposability (help to scale, move process to another node...)
+On a public cloud, densification allows the use of smaller instances to run an application so reduce costs
+cloud provider portability => need kubernetes to abstract cloud specific services like object bucket storage => than we still need a framework to use those services => Quarkus
 
 When I boot offline, then start crc, I get the issue below:
 ERRO Failed to query DNS from host: lookup api.crc.testing on [::1]:53: read udp [::1]:36955->[::1]:53: read: connection refused

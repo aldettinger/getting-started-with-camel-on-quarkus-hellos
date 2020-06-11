@@ -19,7 +19,7 @@ QUARKUS_NATIVE_PID=$(pgrep -f ${QUARKUS_NATIVE_RUNNER})
 sleep 5s
 
 # Get package size
-QUARKUS_JVM_DISK_SIZE=$(du -chs "${QUARKUS_JVM_RUNNER}.jar" "hello-camel-quarkus-jvm-mode/target/lib" "${JAVA_HOME}" | tail -n 1 | cut -f1)
+QUARKUS_JVM_DISK_SIZE=$(du -chLs "${QUARKUS_JVM_RUNNER}.jar" "hello-camel-quarkus-jvm-mode/target/lib" "${JAVA_HOME}" | tail -n 1 | cut -f1)
 QUARKUS_NATIVE_DISK_SIZE=$(du -sh "${QUARKUS_NATIVE_RUNNER}" | cut -f1)
 
 # Get boot time

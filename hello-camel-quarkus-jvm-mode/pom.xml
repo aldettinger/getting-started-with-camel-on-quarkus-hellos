@@ -52,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel.quarkus</groupId>
-            <artifactId>camel-quarkus-direct</artifactId>
+            <artifactId>camel-quarkus-pdf</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.camel.quarkus</groupId>
@@ -60,7 +60,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel.quarkus</groupId>
-            <artifactId>camel-quarkus-pdf</artifactId>
+            <artifactId>camel-quarkus-platform-http</artifactId>
         </dependency>
     </dependencies>
     <build>
