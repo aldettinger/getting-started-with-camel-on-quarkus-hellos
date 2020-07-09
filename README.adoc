@@ -29,21 +29,25 @@ curl http://hello-camel-quarkus-native-mode-default.apps-crc.testing/hello-camel
 
 !!! STEPS ABOVE ARE NOT NEEDED AT THIS STAGE, START HERE !!!
 
-# Delete my-quarkus project from eclipse if any
+# Launch eclipse and delete the 'my-quarkus' project from eclipse if any
 # Open terminator
 rm -fr ~/dev/demos/camel-quarkus-demo/my-quarkus-project/
+rm ~/dev/demos/camel-quarkus-demo/file.pdf
 cd ~/dev/demos/camel-quarkus-demo/
-Split window horizontally #And in both terminal do:
+# Split window horizontally
+# Tune the zoom (CTRL + scroll 4x)
+# Put the README.adoc demo script on another screen if any
 ----
 
 == How to Run the Demo
 
 [source,shell]
 ----
-mvnu io.quarkus:quarkus-maven-plugin:1.5.1.Final:create
+mvnu io.quarkus:quarkus-maven-plugin:1.6.0.Final:create
 # Keep all default values
 
-# Show extensions
+# quarkus extensions = make a technology or framework working with quarkus
+# camel = consume / eip / produce
 cd my-quarkus-project
 mvnu quarkus:list-extensions
 mvnu quarkus:add-extensions -Dextensions=platform-http,jsonpath,pdf
@@ -54,16 +58,14 @@ Create MyRouteBuilder class:
 public class MyRouteBuilder extends RouteBuilder {
     @Override
     public void configure() {
-        // \ud83d\udc2b => camel
-        // \ud83d\ude03 => grinning face
         from("platform-http:/hello").setBody(constant("Hello From Camel Quarkus !"));
     }
 }
 
-# Show the dev mode, update message and curl again
+# Show the dev mode
 mvnu quarkus:dev
 
-# Get the first body, change, and show update in the blink of an eye
+# watch changes and update in the blink of an eye (then kill the watch as it will pollute startup memory in next steps)
 watch http :8080/hello
 
 # Add MyRouteBuilderTest:
@@ -76,6 +78,9 @@ public class MyRouteBuilderTest {
         given().when().get("/hello").then().statusCode(200);
     }
 }
+
+# Build it
+mvnu clean install
 
 # Display the size of the runner + lib + java (lib/modules is good estimation of jre size)
 du -chLs target/my-quarkus-project-1.0-SNAPSHOT-runner.jar target/lib ${JAVA_HOME}/lib/modules
@@ -91,10 +96,16 @@ ps -o rss,cmd $(pgrep -f quarkus)
 http :8080/hello
 
 # Then show native mode, 3 minutes speech while native compilation occurs
-# JVM mode ~= Moves some typical framework init phase from runtime to build time
-              Load/parse config, find annotated class, load class to enable/disable features
-# Native   ~= GraalVM Native Image, ahead of time compilation, static code analysis, remove unused class/method/fields
-              Remove jit, execute static initializer, take snapshot of startup application memory
+# JVM mode ~= Optimize boot/mem/disk by moving some framework initialization work from runtime to build time
+              Load configuration at build time, find annotated class at build time, remove unused bean at build time
+
+# Native   ~= Optimize with a different technique using GraalVM Native Image static compilation at build time
+              Execute static initializer at build time, remove unused method/fields at build time, remove jit compiler
+              Build an executable containing the snapshot of the application startup memory
+
+# JVM vs Native ~= Both are kubernetes oriented compared to typical java framework. It's different optimizations adapted to different scenarios.
+  JVM ~= quick build/debug, fast startup, more memory, a single long running jvm with good throughput/latency
+  Native ~= long build/debug, instant startup, less memory, some short running jvms with throughput by density
 mvnu package -P native
 
 # Show size first (just enough of application code / third party libs / jdk)
@@ -121,12 +132,15 @@ http :8080/hello
 #                setBody(simple("It's {{camel.default-msg}}")).
 #            end();
 #    }
-http :8080/hello <<< '{room: {temperature: 30}}'
+watch http :8080/hello <<< '{room: {temperature: 30}}'
 
 # Finally, add pdf generation
-# .to("pdf:create?fontSize=26").convertBodyTo(byte[].class);
+# .to("pdf:create?fontSize=26").convertBodyTo(byte[].class); // convert needed till CAMEL-15267 camel 3.4.1 and 3.5.0
 http :8080/hello <<< '{room : {temperature : 40}}' > test.pdf
 firefox test.pdf
+
+# This is basic example for a demo but now you should have a better idea of what is camel-quarkus
+# In a nutshell, it's all about lightweight pattern based integrations running in the cloud
 
 # Then run the demo comparing camel-hellos project, e.g a summary like
 # Implement standalone, and perharps spring boot
@@ -151,9 +165,9 @@ vscode to have auto completion ?
 init project from quarkus.io ?
 compare.sh compare disk/boot/rss BEFORE the first request, so do the same during the demo
 Show quarkus live reload ? (update the dev and show result directly in the cluster)
-Does quarkus really improve disk size in jvm mode only ? integrate an unused class and check size for instance ?
+Does quarkus really improve disk size in jvm mode only ? integrate an unused class and check size for instance ? APPARENTLY IT SHOULD
 Does quarkus really improve memory size in jvm mode only ? how ?
-Finish the demo explaining how could help with camel-quarkus project
+Finish the demo explaining how one could help with camel-quarkus project
 An interest of fast startup is that it improve disposability (help to scale, move process to another node...)
 On a public cloud, densification allows the use of smaller instances to run an application so reduce costs
 cloud provider portability => need kubernetes to abstract cloud specific services like object bucket storage => than we still need a framework to use those services => Quarkus
