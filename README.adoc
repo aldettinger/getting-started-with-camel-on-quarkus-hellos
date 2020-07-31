@@ -36,18 +36,22 @@ rm ~/dev/demos/camel-quarkus-demo/file.pdf
 cd ~/dev/demos/camel-quarkus-demo/
 # Split window horizontally
 # Tune the zoom (CTRL + scroll 4x)
-# Put the README.adoc demo script on another screen if any
+# Put the README.adoc demo script on another screen if any (could be good to show that in vim or gedit)
 ----
 
 == How to Run the Demo
 
 [source,shell]
 ----
-mvnu io.quarkus:quarkus-maven-plugin:1.6.0.Final:create
+# Speech: Demo aim is to get started and introduce some key concept
+# Speech: Camel = Communicate with 300+ different technologies or framework and process the data with some proven integration recipes called eips
+# Speech: Typical usage of camel = consume / eip / produce
+# Speech: That said, how to use camel on a kubernetes native stack like Quarkus ?
+
+mvnu io.quarkus:quarkus-maven-plugin:1.6.1.Final:create
 # Keep all default values
 
-# quarkus extensions = make a technology or framework working with quarkus
-# camel = consume / eip / produce
+# Speech: quarkus extensions = make a technology or framework working with quarkus
 cd my-quarkus-project
 mvnu quarkus:list-extensions
 mvnu quarkus:add-extensions -Dextensions=platform-http,jsonpath,pdf
@@ -96,8 +100,8 @@ ps -o rss,cmd $(pgrep -f quarkus)
 http :8080/hello
 
 # Then show native mode, 3 minutes speech while native compilation occurs
-# JVM mode ~= Optimize boot/mem/disk by moving some framework initialization work from runtime to build time
-              Load configuration at build time, find annotated class at build time, remove unused bean at build time
+# JVM mode ~= Optimize boot time and mem usage by moving some framework initialization tasks from runtime to build time
+              Load configuration at build time, find annotated classes at build time, remove unused bean at build time
 
 # Native   ~= Optimize with a different technique using GraalVM Native Image static compilation at build time
               Execute static initializer at build time, remove unused method/fields at build time, remove jit compiler
@@ -105,7 +109,7 @@ http :8080/hello
 
 # JVM vs Native ~= Both are kubernetes oriented compared to typical java framework. It's different optimizations adapted to different scenarios.
   JVM ~= quick build/debug, fast startup, more memory, a single long running jvm with good throughput/latency
-  Native ~= long build/debug, instant startup, less memory, some short running jvms with throughput by density
+  Native ~= long build/debug, instant startup, less memory, some short running jvms with throughput by scaling/density
 mvnu package -P native
 
 # Show size first (just enough of application code / third party libs / jdk)
@@ -139,19 +143,17 @@ watch http :8080/hello <<< '{room: {temperature: 30}}'
 http :8080/hello <<< '{room : {temperature : 40}}' > test.pdf
 firefox test.pdf
 
-# This is basic example for a demo but now you should have a better idea of what is camel-quarkus
-# In a nutshell, it's all about lightweight pattern based integrations running in the cloud
-
-# Then run the demo comparing camel-hellos project, e.g a summary like
-# Implement standalone, and perharps spring boot
-						boot	rss		size
- standalone			1s		1Mo		1Mo
- spring-boot			2s		2Mo		2Mo
- quarkus-jvm-mode		3s		3Mo		3Mo
- quarkus-native-mode	4s		4Mo		4Mo
+# Then run compare.sh
+cd ..
+# Speech: compare SB/JVM/NATIVE, start service, request until http 200 is returned
 camel-hellos/compare.sh
 
-# Then show the resulting densification in a crc cluster with quotas mem ? cpu ? (ideally all hellos project but could be only jvm vs native)
+# Speech: This is basic example for a demo but now you should have a better idea of what is camel-quarkus
+# Speech: In a nutshell, it's all about lightweight pattern based integrations running in the cloud
+
+# Then I should end up with thanks, ask for contributions, give links, and perharps take about camel project family ?
+
+# In a future demo, then show the resulting densification in a crc cluster with quotas mem ? cpu ? (ideally all hellos project but could be only jvm vs native)
 # Launch some requests to scale pods, we would expect native to exhibit a better densification
 At first, it's possible to set replicas = 20 and show the time it takes in OpenShift DeploymentConfig view
 
@@ -160,27 +162,25 @@ Interest of native mode:
 JIT vs AOT => faster startup since code is already pre-compiled into efficient machine code
 No need to include infrastructure to load and optimize code at run time => less memory
 static analysis to embed what's used from the JDK, 3rd party libs and JVM code
-Tool "hey" to push a burden like "hey url"
 vscode to have auto completion ?
-init project from quarkus.io ?
 compare.sh compare disk/boot/rss BEFORE the first request, so do the same during the demo
 Show quarkus live reload ? (update the dev and show result directly in the cluster)
 Does quarkus really improve disk size in jvm mode only ? integrate an unused class and check size for instance ? APPARENTLY IT SHOULD
-Does quarkus really improve memory size in jvm mode only ? how ?
-Finish the demo explaining how one could help with camel-quarkus project
 An interest of fast startup is that it improve disposability (help to scale, move process to another node...)
 On a public cloud, densification allows the use of smaller instances to run an application so reduce costs
-cloud provider portability => need kubernetes to abstract cloud specific services like object bucket storage => than we still need a framework to use those services => Quarkus
+cloud provider portability => need kubernetes to abstract cloud specific services like object bucket storage => then we still need a framework to use those services => Quarkus
 Quarkus streamlines the registration process by detecting and auto-registering as many of your code’s reflection candidates as possible (interest of quarkus on top of graalvm)
 JVM mode is simpler, going native could introduce additional steps (eg add some dependencies to indexer)
 Check how to simply deploy on openshift (https://developers.redhat.com/blog/2020/04/24/ramp-up-on-quarkus-a-kubernetes-native-java-framework/)
-Quarkus, even in JVM mode, moves some typical framework init phase from runtime to build time (load/parse config,
-find annotated class, attempt to load class to enable/disable features, build its model of the world)
+Quarkus, even in JVM mode, moves some typical framework init phase from runtime to build time (load/parse config),
+Find annotated class, attempt to load class to enable/disable features, build its model of the world)
 An advantage of quarkus jvm mode vs native, is that you have some startup/mem/disk optimization with a quick build phase
 Quarkus-native applications bring a much smaller memory footprint at the expense of throughput, which is now handled through scaling and elasticity—the same way you find in Kubernetes
 It also brings faster startup speeds at the expense of dynamic runtime behavior, which is now unnecessary overhead in immutable deployment architectures—again, like you find in Kubernetes
 GraalVM operates with a closed world assumption. It analyzes the call tree and removes all the classes/methods/fields that are not used directly.
 One size does not fit all! Quarkus gives you the option to scale up in JVM mode if you need a single instance with a larger heap, or scale out in Native mode if you need more, lighter-weight instances
+
+TODO: Add a measure of the time to response in the comparison tab, from compare.sh I mean.
 
 When I boot offline, then start crc, I get the issue below:
 ERRO Failed to query DNS from host: lookup api.crc.testing on [::1]:53: read udp [::1]:36955->[::1]:53: read: connection refused
