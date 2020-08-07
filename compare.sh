@@ -41,7 +41,7 @@ QUARKUS_NATIVE_START_MS=$(date +%s%3N)
 "${QUARKUS_NATIVE_RUNNER}" -Dquarkus.http.port=9082 2>&1 > "${QUARKUS_NATIVE_RUNNER}.log" &
 QUARKUS_NATIVE_PID=$(pgrep -f ${QUARKUS_NATIVE_RUNNER})
 #echo "Camel-hello started with Quarkus Native Mode, PID = ${QUARKUS_NATIVE_PID}"
-wait_http_success 'http://localhost:9082/hello-camel-quarkus-native-mode' 0.001
+wait_http_success 'http://localhost:9082/hello-camel-quarkus-native-mode' 0.010
 QUARKUS_NATIVE_READY_MS=$(date +%s%3N)
 QUARKUS_NATIVE_FIRST_RESPONSE_DELAY=$((QUARKUS_NATIVE_READY_MS-QUARKUS_NATIVE_START_MS))
 #echo "Delay to first response for Quarkus Native: ${QUARKUS_NATIVE_FIRST_RESPONSE_DELAY}"

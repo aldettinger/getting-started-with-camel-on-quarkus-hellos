@@ -35,7 +35,8 @@ rm -fr ~/dev/demos/camel-quarkus-demo/my-quarkus-project/
 rm ~/dev/demos/camel-quarkus-demo/file.pdf
 cd ~/dev/demos/camel-quarkus-demo/
 # Split window horizontally
-# Tune the zoom (CTRL + scroll 4x)
+# Tune the zoom (CTRL + scroll 6x)
+# Zoom in eclipse editor (CTRL/SHIFT/+ 3 times so that we have ~90 chars per line)
 # Put the README.adoc demo script on another screen if any (could be good to show that in vim or gedit)
 ----
 
@@ -43,15 +44,21 @@ cd ~/dev/demos/camel-quarkus-demo/
 
 [source,shell]
 ----
-# Speech: Demo aim is to get started and introduce some key concept
-# Speech: Camel = Communicate with 300+ different technologies or framework and process the data with some proven integration recipes called eips
+# Speech: Welcome, Software Engineer, Camel contributor
+# Speech: Getting started on camel-quarkus, key concepts
+# Speech: Quarkus = Kubernetes native Java stack
+# Speech: Camel = 300+ technologies/framework and many eips (=proven integration recipes)
 # Speech: Typical usage of camel = consume / eip / produce
-# Speech: That said, how to use camel on a kubernetes native stack like Quarkus ?
 
+# Pre-requisistes
+java -version
+mvnu -version
+native-image --version (gcc, glibc, zlib)
+
+# Create project skeleton: Keep all default values
 mvnu io.quarkus:quarkus-maven-plugin:1.6.1.Final:create
-# Keep all default values
 
-# Speech: quarkus extensions = make a technology or framework working with quarkus
+# Speech: quarkus extensions = Make a technology or framework working with quarkus
 cd my-quarkus-project
 mvnu quarkus:list-extensions
 mvnu quarkus:add-extensions -Dextensions=platform-http,jsonpath,pdf
@@ -66,10 +73,11 @@ public class MyRouteBuilder extends RouteBuilder {
     }
 }
 
-# Show the dev mode
+# Speech: Dev mode = Continuous feedback loop
 mvnu quarkus:dev
 
-# watch changes and update in the blink of an eye (then kill the watch as it will pollute startup memory in next steps)
+# Speech: Watch changes and update in the blink of an eye
+# Kill the watch as it will pollute startup memory in next steps
 watch http :8080/hello
 
 # Add MyRouteBuilderTest:
@@ -83,23 +91,23 @@ public class MyRouteBuilderTest {
     }
 }
 
-# Build it
+# Build it in JVM Mode
 mvnu clean install
 
-# Display the size of the runner + lib + java (lib/modules is good estimation of jre size)
+# Speech: All inclusive disk size ~= runner + lib + java (for java, you'll need at least modules)
+# "lib/modules" size ~= openjre11-alpine-image-size - alpine-3.12-image-size (open jre 11.0.9 docker image is based on alpine 3.12)
 du -chLs target/my-quarkus-project-1.0-SNAPSHOT-runner.jar target/lib ${JAVA_HOME}/lib/modules
 
-# Show the jvm mode from the command line
+# Speech: Camel boot time / Quarkus boot time
 java -jar target/my-quarkus-project-1.0-SNAPSHOT-runner.jar
 
-# Notice the camel boot time
-# Define Resident Set Size (everything in RAM ~= shared library + stack + heap) and display usage in KiB
+# Speech: Resident Set Size = everything in RAM in KiB ~= shared library + stack + heap
 ps -o rss,cmd $(pgrep -f quarkus)
 
-# Proves that it run but ONLY after having checked initial memory
+# Proves that it run
 http :8080/hello
 
-# Then show native mode, 3 minutes speech while native compilation occurs
+# Then show native mode, 3 minutes speech while native compilation occurs:
 # JVM mode ~= Optimize boot time and mem usage by moving some framework initialization tasks from runtime to build time
               Load configuration at build time, find annotated classes at build time, remove unused bean at build time
 
@@ -107,14 +115,14 @@ http :8080/hello
               Execute static initializer at build time, remove unused method/fields at build time, remove jit compiler
               Build an executable containing the snapshot of the application startup memory
 
-# JVM vs Native ~= Both are kubernetes oriented compared to typical java framework. It's different optimizations adapted to different scenarios.
-  JVM ~= quick build/debug, fast startup, more memory, a single long running jvm with good throughput/latency
+# JVM vs Native ~= It's different optimizations adapted to different scenarios.
+  JVM ~= quick build/debug, fast startup, more memory, a single long running jvm with good throughput and response time
   Native ~= long build/debug, instant startup, less memory, some short running jvms with throughput by scaling/density
 mvnu package -P native
 
-# Show size first (just enough of application code / third party libs / jdk)
+# Speech: Just enough of application code / third party libs / jdk)
 du -chLs target/my-quarkus-project-1.0-SNAPSHOT-runner*
-# Then boot time
+# Speech: Instant startup
 target/my-quarkus-project-1.0-SNAPSHOT-runner
 # Then rss mem
 ps -o rss,cmd $(pgrep -f quarkus)
@@ -124,6 +132,7 @@ http :8080/hello
 # Add default message:
 # setBody(simple("{{camel.default-msg}}")). # in route
 # camel.default-msg = COLD # in src/main/resources/applications.properties
+mvnu quarkus:dev
 http :8080/hello
 
 # Add some jsonpath logic in route:
@@ -145,14 +154,16 @@ firefox test.pdf
 
 # Then run compare.sh
 cd ..
-# Speech: compare SB/JVM/NATIVE, start service, request until http 200 is returned
+# Speech: compare SB/JVM/NATIVE, roughly estimate the time to service the first request with consecutive http requests
 camel-hellos/compare.sh
 
 # Speech: This is basic example for a demo but now you should have a better idea of what is camel-quarkus
 # Speech: In a nutshell, it's all about lightweight pattern based integrations running in the cloud
 
-# Then I should end up with thanks, ask for contributions, give links, and perharps take about camel project family ?
+# Then I should end up with thanks, ask for contributions, give links, and perharps talk about camel project family ?
 
+# End for now
+----------------------------------------------------------------------------------------------------------------------
 # In a future demo, then show the resulting densification in a crc cluster with quotas mem ? cpu ? (ideally all hellos project but could be only jvm vs native)
 # Launch some requests to scale pods, we would expect native to exhibit a better densification
 At first, it's possible to set replicas = 20 and show the time it takes in OpenShift DeploymentConfig view
@@ -180,7 +191,13 @@ It also brings faster startup speeds at the expense of dynamic runtime behavior,
 GraalVM operates with a closed world assumption. It analyzes the call tree and removes all the classes/methods/fields that are not used directly.
 One size does not fit all! Quarkus gives you the option to scale up in JVM mode if you need a single instance with a larger heap, or scale out in Native mode if you need more, lighter-weight instances
 
-TODO: Add a measure of the time to response in the comparison tab, from compare.sh I mean.
+TODO: I'll present before Justin that will show some EIPs pattern
+TODO: I'll present after Omar that will show how to build and deploy camel quarkus routes with tekton and knative
+
+TODO: Parler trop vite au début, re-travailler le milieu (peut-être des slides)
+      Trop évasif au début
+      Il manque une transition pour camel_hellos
+      Pas un benchmark
 
 When I boot offline, then start crc, I get the issue below:
 ERRO Failed to query DNS from host: lookup api.crc.testing on [::1]:53: read udp [::1]:36955->[::1]:53: read: connection refused
