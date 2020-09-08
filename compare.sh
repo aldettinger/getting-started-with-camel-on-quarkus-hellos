@@ -13,6 +13,11 @@ function wait_http_success {
 # Set working directory based on script
 cd "$(dirname "$0")"
 
+if [ "${1}" != "nowarmup" ];
+then
+  ./${0} nowarmup 2>&1 > /dev/null
+fi
+
 # Start camel-hello with Spring Boot
 SPRINGBOOT_RUNNER='hello-camel-spring-boot/target/hello-camel-spring-boot-1.0-SNAPSHOT'
 SPRINGBOOT_START_MS=$(date +%s%3N)
@@ -67,15 +72,15 @@ QUARKUS_JVM_RSS=$(ps -o rss ${QUARKUS_JVM_PID} | sed -n 2p)
 SPRINGBOOT_RSS=$(ps -o rss ${SPRINGBOOT_PID} | sed -n 2p)
 
 # Print report
-#printf '=%.0s' {1..73} && printf '\n'
+#printf '=%.0s' {1..80} && printf '\n'
 #printf "| %-58s |\n" 'NOT A FULL BENCHMARK BUT GIVES A GOOD OVERVIEW'
-printf '=%.0s' {1..73} && printf '\n'
-printf "| %-14s | %-20s | %-9s | %-17s |\n" 'Runtime' 'First Response Delay' 'Disk Size' 'Resident Set Size'
-printf '=%.0s' {1..73} && printf '\n'
-printf "| %-14s | %20s | %9s | %17s |\n" 'Spring Boot' ${SPRINGBOOT_FIRST_RESPONSE_DELAY}ms ${SPRINGBOOT_DISK_SIZE} ${SPRINGBOOT_RSS}K
-printf "| %-14s | %20s | %9s | %17s |\n" 'Quarkus JVM' ${QUARKUS_JVM_FIRST_RESPONSE_DELAY}ms ${QUARKUS_JVM_DISK_SIZE} ${QUARKUS_JVM_RSS}K
-printf "| %-14s | %20s | %9s | %17s |\n" 'Quarkus Native' ${QUARKUS_NATIVE_FIRST_RESPONSE_DELAY}ms ${QUARKUS_NATIVE_DISK_SIZE} ${QUARKUS_NATIVE_RSS}K
-printf '=%.0s' {1..73} && printf '\n'
+printf '=%.0s' {1..80} && printf '\n'
+printf "| %-14s | %-27s | %-9s | %-17s |\n" 'Runtime' 'Boot + First Response Delay' 'Disk Size' 'Resident Set Size'
+printf '=%.0s' {1..80} && printf '\n'
+printf "| %-14s | %27s | %9s | %17s |\n" 'Spring Boot' ${SPRINGBOOT_FIRST_RESPONSE_DELAY}ms ${SPRINGBOOT_DISK_SIZE} ${SPRINGBOOT_RSS}K
+printf "| %-14s | %27s | %9s | %17s |\n" 'Quarkus JVM' ${QUARKUS_JVM_FIRST_RESPONSE_DELAY}ms ${QUARKUS_JVM_DISK_SIZE} ${QUARKUS_JVM_RSS}K
+printf "| %-14s | %27s | %9s | %17s |\n" 'Quarkus Native' ${QUARKUS_NATIVE_FIRST_RESPONSE_DELAY}ms ${QUARKUS_NATIVE_DISK_SIZE} ${QUARKUS_NATIVE_RSS}K
+printf '=%.0s' {1..80} && printf '\n'
 
 # Killing processes
 kill -9 ${QUARKUS_JVM_PID} ${QUARKUS_NATIVE_PID} ${SPRINGBOOT_PID}

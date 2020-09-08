@@ -29,26 +29,34 @@ curl http://hello-camel-quarkus-native-mode-default.apps-crc.testing/hello-camel
 
 !!! STEPS ABOVE ARE NOT NEEDED AT THIS STAGE, START HERE !!!
 
-# Launch eclipse and delete the 'my-quarkus' project from eclipse if any
+# Configure display on a single screen for Apache CON @Home (conf system offer "all screen", "single window" or "chrome tab")
 # Open terminator
 rm -fr ~/dev/demos/camel-quarkus-demo/my-quarkus-project/
 rm ~/dev/demos/camel-quarkus-demo/file.pdf
 cd ~/dev/demos/camel-quarkus-demo/
 # Split window horizontally
-# Tune the zoom (CTRL + scroll 6x)
-# Zoom in eclipse editor (CTRL/SHIFT/+ 3 times so that we have ~90 chars per line)
-# Put the README.adoc demo script on another screen if any (could be good to show that in vim or gedit)
+# Tune the zoom (CTRL + scroll 10x)
+# Prepare 'watch http :8080/hello' in bottom shell
+# Zoom in eclipse editor (CTRL/SHIFT/+ 5 times so that we have ~70 chars per line)
+# In eclipse, delete 'my-quarkus-project' from eclipse if any
+# Prepare the import demo in eclipse (~/dev/demos/camel-quarkus-demo)
+# Prepare the slides to be shown when native compilation is running
+# Put the printed demo plan behind the main screen
+
 ----
 
 == How to Run the Demo
 
 [source,shell]
 ----
-# Speech: Welcome, Software Engineer, Camel contributor
-# Speech: Getting started on camel-quarkus, key concepts
-# Speech: Quarkus = Kubernetes native Java stack
-# Speech: Camel = 300+ technologies/framework and many eips (=proven integration recipes)
-# Speech: Typical usage of camel = consume / eip / produce
+# Speech: Welcome to this session about Getting started with Camel on Quarkus
+# Speech: Senor Software Engineer at Red Hat, Camel contributor
+# Speech: Typical camel route, consume message/apply pattern/produce result
+# Speech: Quarkus = Java stack tailored for Kubernetes, microservice and serverless
+# Speech: Bonus at the end, compare this typical route on different runtimes (quarkus, spring-boot)
+
+# Speech: Ask Apache CON @Home attendees to switch the content presentation to full screen
+          Otherwise, they will not see the command and code
 
 # Pre-requisistes
 java -version
@@ -56,15 +64,15 @@ mvnu -version
 native-image --version (gcc, glibc, zlib)
 
 # Create project skeleton: Keep all default values
-mvnu io.quarkus:quarkus-maven-plugin:1.6.1.Final:create
+mvnu io.quarkus:quarkus-maven-plugin:1.7.2.Final:create
 
-# Speech: quarkus extensions = Make a technology or framework working with quarkus
 cd my-quarkus-project
+# Speech: Typical camel route => Interaction with multiple technologies or framework => quarkus extension
 mvnu quarkus:list-extensions
 mvnu quarkus:add-extensions -Dextensions=platform-http,jsonpath,pdf
 
 # Import in eclipse: ~/dev/demos/camel-quarkus-demo/my-quarkus-project
-
+# Speech: Camel Quarkus Bootstrap, one way is to extend RouteBuilder
 Create MyRouteBuilder class:
 public class MyRouteBuilder extends RouteBuilder {
     @Override
@@ -81,6 +89,7 @@ mvnu quarkus:dev
 watch http :8080/hello
 
 # Add MyRouteBuilderTest:
+import io.quarkus.test.junit.QuarkusTest
 import static io.restassured.RestAssured.given;
 
 @QuarkusTest
@@ -91,8 +100,11 @@ public class MyRouteBuilderTest {
     }
 }
 
-# Build it in JVM Mode
+# Speech: Let's see the test is ok
 mvnu clean install
+
+# We have runner jar in target => this is the JVM Mode
+ls target
 
 # Speech: All inclusive disk size ~= runner + lib + java (for java, you'll need at least modules)
 # "lib/modules" size ~= openjre11-alpine-image-size - alpine-3.12-image-size (open jre 11.0.9 docker image is based on alpine 3.12)
@@ -102,7 +114,7 @@ du -chLs target/my-quarkus-project-1.0-SNAPSHOT-runner.jar target/lib ${JAVA_HOM
 java -jar target/my-quarkus-project-1.0-SNAPSHOT-runner.jar
 
 # Speech: Resident Set Size = everything in RAM in KiB ~= shared library + stack + heap
-ps -o rss,cmd $(pgrep -f quarkus)
+ps -o rss,cmd $(pgrep -f my-q)
 
 # Proves that it run
 http :8080/hello
@@ -113,54 +125,64 @@ http :8080/hello
 
 # Native   ~= Optimize with a different technique using GraalVM Native Image static compilation at build time
               Execute static initializer at build time, remove unused method/fields at build time, remove jit compiler
-              Build an executable containing the snapshot of the application startup memory
 
 # JVM vs Native ~= It's different optimizations adapted to different scenarios.
   JVM ~= quick build/debug, fast startup, more memory, a single long running jvm with good throughput and response time
-  Native ~= long build/debug, instant startup, less memory, some short running jvms with throughput by scaling/density
+  Native ~= long build/debug, instant startup, less memory, some short running jvms. lower throughput per-jvm but you can scale.
 mvnu package -P native
+
+# We have a native executable in target => this is the Native Mode
+ls target
 
 # Speech: Just enough of application code / third party libs / jdk)
 du -chLs target/my-quarkus-project-1.0-SNAPSHOT-runner*
 # Speech: Instant startup
 target/my-quarkus-project-1.0-SNAPSHOT-runner
 # Then rss mem
-ps -o rss,cmd $(pgrep -f quarkus)
+ps -o rss,cmd $(pgrep -f my-q)
 # And finally show it working
 http :8080/hello
 
 # Add default message:
 # setBody(simple("{{camel.default-msg}}")). # in route
-# camel.default-msg = COLD # in src/main/resources/applications.properties
+# camel.default-msg = It's warm # in src/main/resources/applications.properties
 mvnu quarkus:dev
 http :8080/hello
 
+# Speech: Explains the route logic a bit more
+# Speech: It receives an http request with a json body and extract the temperature
+# Speech: When the temperature is greater than 30 it issues a message like "It's warm"
+# Speech: Otherwise, it issues a message like "It's cold"
 # Add some jsonpath logic in route:
 #    @Override
 #    public void configure() throws Exception {
+#        // {room:{temperature:50}}
 #        from("platform-http:/hello").
 #            choice().when(jsonpath("$.room[?(@.temperature > 30)]")).
-#                setBody(constant("It's HOT")).
+#                setBody(simple("{{camel.default-msg}}")).
 #            otherwise().
-#                setBody(simple("It's {{camel.default-msg}}")).
+#                setBody(constant("It's cold")).
 #            end();
 #    }
 watch http :8080/hello <<< '{room: {temperature: 30}}'
 
 # Finally, add pdf generation
-# .to("pdf:create?fontSize=26").convertBodyTo(byte[].class); // convert needed till CAMEL-15267 camel 3.4.1 and 3.5.0
+# .to("pdf:create?fontSize=26"); 
 http :8080/hello <<< '{room : {temperature : 40}}' > test.pdf
 firefox test.pdf
 
 # Then run compare.sh
 cd ..
-# Speech: compare SB/JVM/NATIVE, roughly estimate the time to service the first request with consecutive http requests
+# Speech: Bonus Time ! Compare this demo route on different runtimes
+# Speech: Same demo on top of Spring Boot, Quarkus JVM Mode and Quarkus Native Mode
+# Speech: Estimation of time needed to boot and serve the first request
 camel-hellos/compare.sh
 
-# Speech: This is basic example for a demo but now you should have a better idea of what is camel-quarkus
+# Speech: This is basic example for a demo but now you should have a better idea of WHY we've created camel-quarkus
 # Speech: In a nutshell, it's all about lightweight pattern based integrations running in the cloud
 
-# Then I should end up with thanks, ask for contributions, give links, and perharps talk about camel project family ?
+# Slides: Show last page
+# Maybe a transition to next speaker (this is just local demo, then let's see how to build and deploy with Omar )
 
 # End for now
 ----------------------------------------------------------------------------------------------------------------------
@@ -194,13 +216,31 @@ One size does not fit all! Quarkus gives you the option to scale up in JVM mode 
 TODO: I'll present before Justin that will show some EIPs pattern
 TODO: I'll present after Omar that will show how to build and deploy camel quarkus routes with tekton and knative
 
-TODO: Parler trop vite au début, re-travailler le milieu (peut-être des slides)
-      Trop évasif au début
-      Il manque une transition pour camel_hellos
-      Pas un benchmark
+TODO: tool "dive" to get image details, like image base size... to estimate java size ?
+
+TODO: Add a component customization example in demo (like in https://camel.apache.org/camel-quarkus/latest/user-guide/bootstrap.html)
+TODO: Maybe start with a non arc RouteBuilder, then say oh I need a bean, or whatnot, so add @ApplicationScoped on the route. And actually, is there any scenarios where we would take the boot time penalty of using @ApplicationScoped route ?
+
+TODO: Fast-jar packaging format in demo
+
+TODO ABEL: Take care with bluejeans, shift of 2/3s between audio/video, a small pause between command
+           Show that test were executed first, then transition to this is JVM MODE.
+           Don't talk about Bonus at the end (this is just he last step)
+           Enunciate the plan clearly at the beginning (and then good transition between phases)
+           Number of extensions ~50% of camel components, complete list on quarkus site, jvm only or native
+           Camel quarkus offer XML DSL
+           Use of env variable for setting the quarkus property
+           Slides on Google meet ? tiny url pour les liens ? QR Code ?
+
+TODO: Deploy to OpenShift using JKube/OpenshiftMavenPlugin ?
+      https://developers.redhat.com/blog/2020/08/24/java-development-on-top-of-kubernetes-using-eclipse-jkube/?sc_cid=7013a000002h31QAAQ
+
+TODO: Need better sound quality (the quality is better when using laptop microphone, but then attendees hear keystrokes and laptop fans)
+TODO: Maybe print the demo plan behind and display it at the bottom of the screen.
 
 When I boot offline, then start crc, I get the issue below:
 ERRO Failed to query DNS from host: lookup api.crc.testing on [::1]:53: read udp [::1]:36955->[::1]:53: read: connection refused
 Maybe an app listening on port 53 ? Only when started without network ?
 Then, I replug the network, start vpn and I can start crc again
 ----
+
