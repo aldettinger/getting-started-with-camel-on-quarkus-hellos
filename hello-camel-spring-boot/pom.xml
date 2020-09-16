@@ -4,17 +4,21 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.acme.sb.example</groupId>
+   <parent>
+    <groupId>org.acme.sample</groupId>
+    <artifactId>camel-quarkus-hellos</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+
+  <groupId>org.acme.sb.sample</groupId>
   <artifactId>hello-camel-spring-boot</artifactId>
   <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
 
   <name>A Camel Spring Boot Route</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <spring.boot-version>2.3.0.RELEASE</spring.boot-version>
   </properties>
 
   <dependencyManagement>
@@ -31,7 +35,7 @@
       <dependency>
         <groupId>org.apache.camel.springboot</groupId>
         <artifactId>camel-spring-boot-dependencies</artifactId>
-        <version>3.4.0</version>
+        <version>${camel-version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

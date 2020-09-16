@@ -2,11 +2,17 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.acme.quarkus.sample</groupId>
+  <groupId>org.acme.sample</groupId>
   <artifactId>camel-quarkus-hellos</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
+  <properties>
+    <camel-version>3.5.0</camel-version>
+    <quarkus-version>1.8.0.Final</quarkus-version>
+    <spring.boot-version>2.3.3.RELEASE</spring.boot-version>
+  </properties>
   <modules>
+    <module>hello-camel-spring-boot</module>
     <module>hello-camel-quarkus-jvm-mode</module>
     <module>hello-camel-quarkus-native-mode</module>
   </modules>
