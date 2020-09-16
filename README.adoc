@@ -36,6 +36,7 @@ rm ~/dev/demos/camel-quarkus-demo/file.pdf
 cd ~/dev/demos/camel-quarkus-demo/
 # Split window horizontally
 # Tune the zoom (CTRL + scroll 10x)
+# Prepare 'ps -o rss,cmd $(pgrep -f my-q)' in bottom shell
 # Prepare 'watch http :8080/hello' in bottom shell
 # Zoom in eclipse editor (CTRL/SHIFT/+ 5 times so that we have ~70 chars per line)
 # In eclipse, delete 'my-quarkus-project' from eclipse if any
@@ -53,26 +54,27 @@ cd ~/dev/demos/camel-quarkus-demo/
 # Speech: Senor Software Engineer at Red Hat, Camel contributor
 # Speech: Typical camel route, consume message/apply pattern/produce result
 # Speech: Quarkus = Java stack tailored for Kubernetes, microservice and serverless
-# Speech: Bonus at the end, compare this typical route on different runtimes (quarkus, spring-boot)
+# Speech: Extensions, dev mode, test, jvm & native, build a typical route & compare runtime metrics
 
 # Speech: Ask Apache CON @Home attendees to switch the content presentation to full screen
           Otherwise, they will not see the command and code
 
 # Pre-requisistes
-java -version
-mvnu -version
+java --version
+mvnu --version
 native-image --version (gcc, glibc, zlib)
 
 # Create project skeleton: Keep all default values
-mvnu io.quarkus:quarkus-maven-plugin:1.7.2.Final:create
+mvnu io.quarkus:quarkus-maven-plugin:1.7.3.Final:create
 
 cd my-quarkus-project
 # Speech: Typical camel route => Interaction with multiple technologies or framework => quarkus extension
 mvnu quarkus:list-extensions
+# Speech: Most camel components available, some in JVM only, some with native support => full list on camel website
 mvnu quarkus:add-extensions -Dextensions=platform-http,jsonpath,pdf
 
 # Import in eclipse: ~/dev/demos/camel-quarkus-demo/my-quarkus-project
-# Speech: Camel Quarkus Bootstrap, one way is to extend RouteBuilder
+# Speech: Camel Quarkus Bootstrap, a java class extending RouteBuilder ( JAVA & XML dsl supported )
 Create MyRouteBuilder class:
 public class MyRouteBuilder extends RouteBuilder {
     @Override
@@ -101,7 +103,10 @@ public class MyRouteBuilderTest {
 }
 
 # Speech: Let's see the test is ok
-mvnu clean install
+mvnu clean test
+
+# Then in a second time => build
+mvnu install
 
 # We have runner jar in target => this is the JVM Mode
 ls target
@@ -119,16 +124,7 @@ ps -o rss,cmd $(pgrep -f my-q)
 # Proves that it run
 http :8080/hello
 
-# Then show native mode, 3 minutes speech while native compilation occurs:
-# JVM mode ~= Optimize boot time and mem usage by moving some framework initialization tasks from runtime to build time
-              Load configuration at build time, find annotated classes at build time, remove unused bean at build time
-
-# Native   ~= Optimize with a different technique using GraalVM Native Image static compilation at build time
-              Execute static initializer at build time, remove unused method/fields at build time, remove jit compiler
-
-# JVM vs Native ~= It's different optimizations adapted to different scenarios.
-  JVM ~= quick build/debug, fast startup, more memory, a single long running jvm with good throughput and response time
-  Native ~= long build/debug, instant startup, less memory, some short running jvms. lower throughput per-jvm but you can scale.
+# Then show slides while building in native mode (~3 minutes)
 mvnu package -P native
 
 # We have a native executable in target => this is the Native Mode
@@ -144,10 +140,11 @@ ps -o rss,cmd $(pgrep -f my-q)
 http :8080/hello
 
 # Add default message:
-# setBody(simple("{{camel.default-msg}}")). # in route
+# setBody(simple("{{msg}}")). # in route
 # camel.default-msg = It's warm # in src/main/resources/applications.properties
 mvnu quarkus:dev
 http :8080/hello
+mvnu quarkus:dev -Dmsg=ItsWarm
 
 # Speech: Explains the route logic a bit more
 # Speech: It receives an http request with a json body and extract the temperature
@@ -173,7 +170,7 @@ firefox test.pdf
 
 # Then run compare.sh
 cd ..
-# Speech: Bonus Time ! Compare this demo route on different runtimes
+# Speech: Now, compare key metrics on different runtimes
 # Speech: Same demo on top of Spring Boot, Quarkus JVM Mode and Quarkus Native Mode
 # Speech: Estimation of time needed to boot and serve the first request
 camel-hellos/compare.sh
@@ -219,17 +216,12 @@ TODO: I'll present after Omar that will show how to build and deploy camel quark
 TODO: tool "dive" to get image details, like image base size... to estimate java size ?
 
 TODO: Add a component customization example in demo (like in https://camel.apache.org/camel-quarkus/latest/user-guide/bootstrap.html)
-TODO: Maybe start with a non arc RouteBuilder, then say oh I need a bean, or whatnot, so add @ApplicationScoped on the route. And actually, is there any scenarios where we would take the boot time penalty of using @ApplicationScoped route ?
+TODO: Maybe start with a non arc RouteBuilder, then say oh I need a bean, or whatnot, so add @ApplicationScoped on the route.
+      And actually, is there any scenarios where we would take the boot time penalty of using @ApplicationScoped route ?
 
 TODO: Fast-jar packaging format in demo
 
 TODO ABEL: Take care with bluejeans, shift of 2/3s between audio/video, a small pause between command
-           Show that test were executed first, then transition to this is JVM MODE.
-           Don't talk about Bonus at the end (this is just he last step)
-           Enunciate the plan clearly at the beginning (and then good transition between phases)
-           Number of extensions ~50% of camel components, complete list on quarkus site, jvm only or native
-           Camel quarkus offer XML DSL
-           Use of env variable for setting the quarkus property
            Slides on Google meet ? tiny url pour les liens ? QR Code ?
 
 TODO: Deploy to OpenShift using JKube/OpenshiftMavenPlugin ?
