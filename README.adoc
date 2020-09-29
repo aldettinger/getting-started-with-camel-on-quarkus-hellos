@@ -29,20 +29,23 @@ curl http://hello-camel-quarkus-native-mode-default.apps-crc.testing/hello-camel
 
 !!! STEPS ABOVE ARE NOT NEEDED AT THIS STAGE, START HERE !!!
 
-# Configure display on a single screen for Apache CON @Home (conf system offer "all screen", "single window" or "chrome tab")
 # Open terminator
 rm -fr ~/dev/demos/camel-quarkus-demo/my-quarkus-project/
 rm ~/dev/demos/camel-quarkus-demo/file.pdf
 cd ~/dev/demos/camel-quarkus-demo/
 # Split window horizontally
 # Tune the zoom (CTRL + scroll 10x)
+# Prepare the 'mvnu io.quarkus:quarkus-maven-plugin:1.8.1.Final:create' in top shell
 # Prepare 'ps -o rss,cmd $(pgrep -f my-q)' in bottom shell
 # Prepare 'watch http :8080/hello' in bottom shell
 # Zoom in eclipse editor (CTRL/SHIFT/+ 5 times so that we have ~70 chars per line)
 # In eclipse, delete 'my-quarkus-project' from eclipse if any
-# Prepare the import demo in eclipse (~/dev/demos/camel-quarkus-demo)
+# Prepare the import of the project in eclipse
 # Prepare the slides to be shown when native compilation is running
 # Put the printed demo plan behind the main screen
+# Configure audio input/output to headset
+# Copy paste tiny urls so that we can send it very early
+# Configure display on a single screen for Apache CON @Home (conf system offer "all screen", "single window" or "chrome tab")
 
 ----
 
@@ -53,11 +56,17 @@ cd ~/dev/demos/camel-quarkus-demo/
 # Speech: Welcome to this session about Getting started with Camel on Quarkus
 # Speech: Senor Software Engineer at Red Hat, Camel contributor
 # Speech: Typical camel route, consume message/apply pattern/produce result
-# Speech: Quarkus = Java stack tailored for Kubernetes, microservice and serverless
+# Speech: Quarkus = Kubernetes Java stack tailored for OpenJDK HotSpot and GraalVM
 # Speech: Extensions, dev mode, test, jvm & native, build a typical route & compare runtime metrics
 
 # Speech: Ask Apache CON @Home attendees to switch the content presentation to full screen
           Otherwise, they will not see the command and code
+# Take care of possible lags = audio/video shift, it's worth waiting few seconds so that everyone could see commands output
+
+# Copy paste tiny urls in browser
+# https://tinyurl.com/y2twers4 => Camel Quarkus Extensions List
+# https://tinyurl.com/y5ocv87h => Building native executable
+# https://tinyurl.com/yykp6b54 => Demo source on github
 
 # Pre-requisistes
 java --version
@@ -65,12 +74,12 @@ mvnu --version
 native-image --version (gcc, glibc, zlib)
 
 # Create project skeleton: Keep all default values
-mvnu io.quarkus:quarkus-maven-plugin:1.7.3.Final:create
+mvnu io.quarkus:quarkus-maven-plugin:1.8.1.Final:create
 
 cd my-quarkus-project
 # Speech: Typical camel route => Interaction with multiple technologies or framework => quarkus extension
 mvnu quarkus:list-extensions
-# Speech: Most camel components available, some in JVM only, some with native support => full list on camel website
+# Speech: Most camel components available, different mode supported, jvm-only vs native => full list on camel website
 mvnu quarkus:add-extensions -Dextensions=platform-http,jsonpath,pdf
 
 # Import in eclipse: ~/dev/demos/camel-quarkus-demo/my-quarkus-project
@@ -118,7 +127,7 @@ du -chLs target/my-quarkus-project-1.0-SNAPSHOT-runner.jar target/lib ${JAVA_HOM
 # Speech: Camel boot time / Quarkus boot time
 java -jar target/my-quarkus-project-1.0-SNAPSHOT-runner.jar
 
-# Speech: Resident Set Size = everything in RAM in KiB ~= shared library + stack + heap
+# Speech: Resident Set Size = everything in RAM in KiB ~= part of shared library + stack + heap that is actually used
 ps -o rss,cmd $(pgrep -f my-q)
 
 # Proves that it run
@@ -141,7 +150,7 @@ http :8080/hello
 
 # Add default message:
 # setBody(simple("{{msg}}")). # in route
-# camel.default-msg = It's warm # in src/main/resources/applications.properties
+# camel.default-msg = ItsWorm # in src/main/resources/applications.properties
 mvnu quarkus:dev
 http :8080/hello
 mvnu quarkus:dev -Dmsg=ItsWarm
@@ -158,7 +167,7 @@ mvnu quarkus:dev -Dmsg=ItsWarm
 #            choice().when(jsonpath("$.room[?(@.temperature > 30)]")).
 #                setBody(simple("{{camel.default-msg}}")).
 #            otherwise().
-#                setBody(constant("It's cold")).
+#                setBody(constant("ItsC old")).
 #            end();
 #    }
 watch http :8080/hello <<< '{room: {temperature: 30}}'
@@ -175,11 +184,11 @@ cd ..
 # Speech: Estimation of time needed to boot and serve the first request
 camel-hellos/compare.sh
 
-# Speech: This is basic example for a demo but now you should have a better idea of WHY we've created camel-quarkus
-# Speech: In a nutshell, it's all about lightweight pattern based integrations running in the cloud
-
 # Slides: Show last page
-# Maybe a transition to next speaker (this is just local demo, then let's see how to build and deploy with Omar )
+# Speech: This is just a typical route built and tested locally for demo purpose but in the next session Omar may show how to do continuous delivery and deployment on Knative
+# Speech: I hope that you now have a better idea of WHY we've created camel-quarkus
+# Speech: In a nutshell, it's all about lightweight pattern based integrations running in the cloud
+# Speech: Thanks all, time for question, feel free to reach out to the community
 
 # End for now
 ----------------------------------------------------------------------------------------------------------------------
@@ -221,13 +230,9 @@ TODO: Maybe start with a non arc RouteBuilder, then say oh I need a bean, or wha
 
 TODO: Fast-jar packaging format in demo
 
-TODO ABEL: Take care with bluejeans, shift of 2/3s between audio/video, a small pause between command
-           Slides on Google meet ? tiny url pour les liens ? QR Code ?
-
 TODO: Deploy to OpenShift using JKube/OpenshiftMavenPlugin ?
       https://developers.redhat.com/blog/2020/08/24/java-development-on-top-of-kubernetes-using-eclipse-jkube/?sc_cid=7013a000002h31QAAQ
 
-TODO: Need better sound quality (the quality is better when using laptop microphone, but then attendees hear keystrokes and laptop fans)
 TODO: Maybe print the demo plan behind and display it at the bottom of the screen.
 
 When I boot offline, then start crc, I get the issue below:
